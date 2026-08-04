@@ -46,7 +46,7 @@ def roll_corr(df, index1, index2, wk):
     .corr(df[index2]))
     
     rolling_corr.plot(figsize=(14,5))
-    plt.title("Rolling Correlation" )
+    plt.title(f"Rolling Correlation {index1} and {index2}" )
     plt.ylabel("Correlation")
     plt.show()
     
