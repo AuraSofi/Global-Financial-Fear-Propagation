@@ -183,24 +183,92 @@ func.corr_gp(crisis_ruuk, "Russia-Ukraine")
 """
 ------------------------  ROLLING Correlation  ------------------------------ 
 
-CHECAR SEMANAS  Y HACER PRUEBAS CON OTRAS COMBINACIONES
+* FALTAAAA CHECAR SEMANAS  Y HACER PRUEBAS CON OTRAS COMBINACIONES
 """
     
 
-func.roll_corr(df_global, "VIX Index", "VHSI Index", 52)
-func.roll_corr(df_global, "VIX Index", "VHSI Index", 26)
-func.roll_corr(df_global, "VIX Index", "IVIUK Index", 26)
-func.roll_corr(df_global, "VIX Index", "VXJ Index", 26)
-func.roll_corr(df_global, "VXJ Index", "VHSI Index", 26)
+#ro_vix_vhsi_52 = func.roll_corr(df_global, "VIX Index", "VHSI Index", 52)
+ro_vix_vhsi_26 = func.roll_corr(df_global, "VIX Index", "VHSI Index", 26)
+#ro_vix_vhsi_26.to_csv("rolling_VIX_VSHI_26.csv")
 
+ro_vix_iviuk = func.roll_corr(df_global, "VIX Index", "IVIUK Index", 26)
+
+ro_vix_vxj = func.roll_corr(df_global, "VIX Index", "VXJ Index", 26)
+
+ro_vxj_vhsi = func.roll_corr(df_global, "VXJ Index", "VHSI Index", 26) 
+
+ro_iviuk_vxj  = func.roll_corr(df_global, "IVIUK Index", "VXJ Index", 26)
+
+ro_iviuk_vhsi = func.roll_corr(df_global, "IVIUK Index",  "VHSI Index", 26)
+
+
+rolling_correlations = pd.concat(
+    [
+        #ro_vix_vhsi_52.rename("VIX_VHSI_52W"),
+        ro_vix_vhsi_26.rename("VIX_VHSI_26W"),
+        ro_vix_iviuk.rename("VIX_IVIUK_26W"),
+        ro_vix_vxj.rename("VIX_VXJ_26W"),
+        ro_vxj_vhsi.rename("VXJ_VHSI_26W"),
+        ro_iviuk_vxj.rename("IVIUK_VXJ_26W"),
+        ro_iviuk_vhsi.rename("IVIUK_VHSI_26W")
+    ],
+    axis=1
+)
+
+#rolling_correlations.to_csv("/Users/aurasofi/Downloads/rolling_correlations.csv")
+
+#pico de correlacion entre ese rango de fechas 
+
+print(rolling_correlations.idxmax())
+print(func.get_max_corr(rolling_correlations, "2007-06-01", "2009-01-01"))
+print(func.get_max_corr(rolling_correlations, "2010-01-01", "2011-08-01"))
+print(func.get_max_corr(rolling_correlations, "2014-06-01", "2015-10-01"))
+print(func.get_max_corr(rolling_correlations, "2020-01-01", "2020-08-01"))
+print(func.get_max_corr(rolling_correlations, "2022-01-01", "2022-05-01"))
+
+
+
+# ### por curiosidad- top 5 picos de corr en  cada serie
+# for col in rolling_correlations.columns:
+#     print(f"\n{col}")
+#     print(rolling_correlations.nlargest(5, col)[col])
+    
+    
+diff_2008 = pd.DataFrame(func.get_diff_corr(rolling_correlations, "2007-06-01", "2009-01-01"))
+diff_eur = pd.DataFrame(func.get_diff_corr(rolling_correlations, "2010-01-01", "2011-08-01"))
+diff_chi = pd.DataFrame(func.get_diff_corr(rolling_correlations,  "2014-06-01", "2015-10-01"))
+diff_cov = pd.DataFrame(func.get_diff_corr(rolling_correlations, "2020-01-01", "2020-08-01"))
+diff_ruk = pd.DataFrame(func.get_diff_corr(rolling_correlations, "2022-01-01", "2022-05-01"))
+
+diff_all = pd.DataFrame(rolling_correlations.diff())
+
+print("\n Mean of diferences in general")
+print(diff_all.mean())
+
+print("\n Mean of diferences 2008 crisis")
+print(diff_2008.mean())
+
+print("\n Mean of diferences Europe crisis")
+print(diff_eur.mean())
+
+print("\n Mean of diferences China crisis")
+print(diff_chi.mean())
+
+print("\n Mean of diferences Covid crisis")
+print(diff_cov.mean())
+
+print("\n Mean of diferences Russia-Ukraine crisis")
+print(diff_ruk.mean())
+
+#df["ro_corr_change"] = df["rolling_correlations"].diff()
 
 """
 ------------------------  CROSS - Correlation  ------------------------------ 
 
-HACER CROSS PARA TODAS LAS COMBINACIONES 
+* FALTAAAA  HACER CROSS PARA TODAS LAS COMBINACIONES 
 
 """
-vix = df_global["VIX Index"]
+vix = df_global["VIX Index"] 
 iviuk = df_global["IVIUK Index"]
 vhsi = df_global["VHSI Index"]
 vxj = df_global["VXJ Index"]
@@ -224,4 +292,4 @@ func.cc_gp(cc_iviuk_vxj)
 
 func.cc_gp(cc_vshi_vxj)
 
-#test 2
+
