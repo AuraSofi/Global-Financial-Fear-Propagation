@@ -13,6 +13,14 @@ from statsmodels.tsa.stattools import adfuller, kpss
 import seaborn as sns
 
 
+crisis = {
+    "2008 Financial Crisis": ("2007-06-01", "2009-01-01", "dodgerblue"),
+    "European Debt Crisis": ("2010-01-01", "2011-08-01", "skyblue"),
+    "China Crash": ("2014-06-01", "2015-10-01", "steelblue"),
+    "COVID Crisis": ("2020-01-01", "2020-08-01", "cyan"),
+    "Russia-Ukraine Crisis": ("2022-01-01", "2022-05-01", "deepskyblue")
+}
+
 
 
 def corr_pd(df, start_date, end_date):
@@ -40,17 +48,40 @@ def corr_gp(corr, pd_name):
     
     
 def roll_corr(df, index1, index2, wk):
-    rolling_corr = (
-    df[index1]
-    .rolling(wk)
-    .corr(df[index2]))
+    rolling_corr = (df[index1].rolling(wk).corr(df[index2]))
     
     rolling_corr.plot(figsize=(14,5))
+    
+    # Agregar todas las crisis
+    for nombre, (inicio, fin, color) in crisis.items():
+        plt.axvspan(inicio, fin,
+                    color=color,
+                    alpha=0.2,
+                    label=nombre)
+    
+    
     plt.title(f"Rolling Correlation {index1} and {index2}" )
     plt.ylabel("Correlation")
     plt.show()
     
-    
+    return rolling_corr
+
+
+def get_max_corr(df, start_date, end_date):
+    period = df.loc[start_date:end_date]
+
+    return pd.DataFrame({
+        "max_correlation": period.max(),
+        "date": period.idxmax(), 
+    })
+
+
+def get_diff_corr(df, start_date, end_date):
+    diff = df.diff()
+    period = diff.loc[start_date:end_date]
+    return period
+
+
 
 def cross_corr(x, y, max_lag):
     lags = range(-max_lag, max_lag + 1)
