@@ -83,6 +83,68 @@ def get_diff_corr(df, start_date, end_date):
 
 
 
+
+def get_crisis_differences(df, crisis):
+    """
+    Calculate the differences in rolling correlations
+    for each crisis period
+    """
+
+    diff_crisis = {}
+
+    for nombre, (inicio, fin, color) in crisis.items():
+        diff_crisis[nombre] = get_diff_corr(df, inicio, fin)
+
+    return diff_crisis
+
+
+
+def get_diff_statistics(diff_all, diff_crisis):
+    """
+    Calculate summary statistics for the differences
+    in rolling correlations for each crisis.
+    """
+
+    results = []
+    
+    # Full period
+    for column in diff_all.columns:
+        
+        series = diff_all[column].dropna()
+    
+        results.append({
+            "Period": "Full Period",
+            "Pair": column,
+            "Mean": series.mean(),
+            "Mean Absolute": series.abs().mean(),
+            "Positive %": (series > 0).mean() * 100,
+            "Negative %": (series < 0).mean() * 100,
+            "Maximum": series.max(),
+            "Minimum": series.min()
+        })
+
+    for crisis_name, df in diff_crisis.items():
+
+        for column in df.columns:
+
+            series = df[column].dropna()
+
+            results.append({
+                "Period": crisis_name,
+                "Pair": column,
+                "Mean": series.mean(),
+                "Mean Absolute": series.abs().mean(),
+                "Positive %": (series > 0).mean() * 100,
+                "Negative %": (series < 0).mean() * 100,
+                "Maximum": series.max(),
+                "Minimum": series.min()
+            })
+
+    return pd.DataFrame(results)
+
+
+
+
 def cross_corr(x, y, max_lag):
     lags = range(-max_lag, max_lag + 1)
     correlations = []
@@ -93,14 +155,20 @@ def cross_corr(x, y, max_lag):
 
     return pd.Series(correlations, index=lags)
 
+    
+    
+    
+def cc_gp(cross_corr, title):
+    plt.figure(figsize=(10, 5))
 
-def cc_gp(cross_corr):
-    plt.figure(figsize=(10,5))
     plt.plot(cross_corr.index, cross_corr.values, marker="o")
+
     plt.axhline(0, color="green")
     plt.axvline(0, color="red", linestyle="--")
+
     plt.xlabel("Lag (weeks)")
     plt.ylabel("Correlation")
-    plt.title("Cross-correlation: VIX vs IVIUK")
+    plt.title(f"Cross-correlation: {title}")
     plt.grid(True)
+
     plt.show()
