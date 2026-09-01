@@ -131,8 +131,11 @@ crisis = {
     "Russia-Ukraine Crisis": ("2022-01-01", "2022-05-01", "deepskyblue")
 }
 
+
 # Columnas de índices
 indices = ["VIX Index", "IVIUK Index", "VHSI Index", "VXJ Index"]
+
+
 
 for col in indices:
 
@@ -163,7 +166,7 @@ for col in indices:
 """
 
 
-    
+   
 crisis_2008 = func.corr_pd(df_global, "2007-06-01", "2009-01-01")
 crisis_euro = func.corr_pd(df_global, "2010-01-01", "2011-08-01")
 crisis_china = func.corr_pd(df_global, "2014-06-01", "2015-10-01")
@@ -183,48 +186,43 @@ func.corr_gp(crisis_ruuk, "Russia-Ukraine")
 """
 ------------------------  ROLLING Correlation  ------------------------------ 
 
-* FALTAAAA CHECAR SEMANAS  Y HACER PRUEBAS CON OTRAS COMBINACIONES
 """
+
+pairs = {
+    "VIX_VHSI_26W": ("VIX Index", "VHSI Index"),
+    "VIX_IVIUK_26W": ("VIX Index", "IVIUK Index"),
+    "VIX_VXJ_26W": ("VIX Index", "VXJ Index"),
+    "VXJ_VHSI_26W": ("VXJ Index", "VHSI Index"),
+    "IVIUK_VXJ_26W": ("IVIUK Index", "VXJ Index"),
+    "IVIUK_VHSI_26W": ("IVIUK Index", "VHSI Index")
+}
+
+
+
+rolling_correlations = pd.DataFrame()
+
+for name, (index1, index2) in pairs.items():
     
-
-#ro_vix_vhsi_52 = func.roll_corr(df_global, "VIX Index", "VHSI Index", 52)
-ro_vix_vhsi_26 = func.roll_corr(df_global, "VIX Index", "VHSI Index", 26)
-#ro_vix_vhsi_26.to_csv("rolling_VIX_VSHI_26.csv")
-
-ro_vix_iviuk = func.roll_corr(df_global, "VIX Index", "IVIUK Index", 26)
-
-ro_vix_vxj = func.roll_corr(df_global, "VIX Index", "VXJ Index", 26)
-
-ro_vxj_vhsi = func.roll_corr(df_global, "VXJ Index", "VHSI Index", 26) 
-
-ro_iviuk_vxj  = func.roll_corr(df_global, "IVIUK Index", "VXJ Index", 26)
-
-ro_iviuk_vhsi = func.roll_corr(df_global, "IVIUK Index",  "VHSI Index", 26)
+    rolling_correlations[name] = func.roll_corr(df_global, index1, index2, 26)
 
 
-rolling_correlations = pd.concat(
-    [
-        #ro_vix_vhsi_52.rename("VIX_VHSI_52W"),
-        ro_vix_vhsi_26.rename("VIX_VHSI_26W"),
-        ro_vix_iviuk.rename("VIX_IVIUK_26W"),
-        ro_vix_vxj.rename("VIX_VXJ_26W"),
-        ro_vxj_vhsi.rename("VXJ_VHSI_26W"),
-        ro_iviuk_vxj.rename("IVIUK_VXJ_26W"),
-        ro_iviuk_vhsi.rename("IVIUK_VHSI_26W")
-    ],
-    axis=1
-)
 
 #rolling_correlations.to_csv("/Users/aurasofi/Downloads/rolling_correlations.csv")
 
-#pico de correlacion entre ese rango de fechas 
+
+
+# ---------------------------------------------------------------------
+# MAXIMUM CORRELATION DURING EACH CRISIS 
+#   -Pico de correlacion entre ese rango de fechas
+# ---------------------------------------------------------------------
 
 print(rolling_correlations.idxmax())
-print(func.get_max_corr(rolling_correlations, "2007-06-01", "2009-01-01"))
-print(func.get_max_corr(rolling_correlations, "2010-01-01", "2011-08-01"))
-print(func.get_max_corr(rolling_correlations, "2014-06-01", "2015-10-01"))
-print(func.get_max_corr(rolling_correlations, "2020-01-01", "2020-08-01"))
-print(func.get_max_corr(rolling_correlations, "2022-01-01", "2022-05-01"))
+
+for name, (start, end, color) in crisis.items():
+
+    print(f"\n{name}")
+    print(func.get_max_corr( rolling_correlations, start, end))
+
 
 
 
@@ -232,64 +230,76 @@ print(func.get_max_corr(rolling_correlations, "2022-01-01", "2022-05-01"))
 # for col in rolling_correlations.columns:
 #     print(f"\n{col}")
 #     print(rolling_correlations.nlargest(5, col)[col])
+
+
+
+
+# -------------------------------------------------------------------
+# DIFFERENCES IN ROLLING CORRELATIONS
+# -------------------------------------------------------------------
+
+diff_all = rolling_correlations.diff()
+
+diff_crisis = func.get_crisis_differences(rolling_correlations, crisis)
     
-    
-diff_2008 = pd.DataFrame(func.get_diff_corr(rolling_correlations, "2007-06-01", "2009-01-01"))
-diff_eur = pd.DataFrame(func.get_diff_corr(rolling_correlations, "2010-01-01", "2011-08-01"))
-diff_chi = pd.DataFrame(func.get_diff_corr(rolling_correlations,  "2014-06-01", "2015-10-01"))
-diff_cov = pd.DataFrame(func.get_diff_corr(rolling_correlations, "2020-01-01", "2020-08-01"))
-diff_ruk = pd.DataFrame(func.get_diff_corr(rolling_correlations, "2022-01-01", "2022-05-01"))
 
-diff_all = pd.DataFrame(rolling_correlations.diff())
+# -------------------------------------------------------------------
+# STATISTICS
+# -------------------------------------------------------------------
 
-print("\n Mean of diferences in general")
-print(diff_all.mean())
+statistics = func.get_diff_statistics (diff_all, diff_crisis)
+#statistics.to_csv("/Users/aurasofi/Downloads/Statistics_roll_corr.csv")
 
-print("\n Mean of diferences 2008 crisis")
-print(diff_2008.mean())
+print("\nStatistics of differences full period and during crises:")
+print(statistics)    
 
-print("\n Mean of diferences Europe crisis")
-print(diff_eur.mean())
 
-print("\n Mean of diferences China crisis")
-print(diff_chi.mean())
-
-print("\n Mean of diferences Covid crisis")
-print(diff_cov.mean())
-
-print("\n Mean of diferences Russia-Ukraine crisis")
-print(diff_ruk.mean())
-
-#df["ro_corr_change"] = df["rolling_correlations"].diff()
 
 """
 ------------------------  CROSS - Correlation  ------------------------------ 
 
-* FALTAAAA  HACER CROSS PARA TODAS LAS COMBINACIONES 
-
 """
-vix = df_global["VIX Index"] 
-iviuk = df_global["IVIUK Index"]
-vhsi = df_global["VHSI Index"]
-vxj = df_global["VXJ Index"]
 
-cc_vix_iviuk = func.cross_corr(vix,iviuk, max_lag=12)
-cc_vix_vshi = func.cross_corr(vix, vhsi, max_lag=12)
-cc_vix_vxj = func.cross_corr(vix, vxj, max_lag=12)
+cross_correlations = {}
 
-cc_iviuk_vshi = func.cross_corr(iviuk, vhsi, max_lag=12)
-cc_iviuk_vxj = func.cross_corr(iviuk, vxj, max_lag=12)
+for name, (index1, index2) in pairs.items():
 
-cc_vshi_vxj = func.cross_corr(vhsi, vxj, max_lag=12)
+    cross_correlations[name] = func.cross_corr(df_global[index1], df_global[index2], max_lag=12)
 
 
-func.cc_gp(cc_vix_iviuk)
-func.cc_gp(cc_vix_vshi)
-func.cc_gp(cc_vix_vxj)
-
-func.cc_gp(cc_iviuk_vshi)
-func.cc_gp(cc_iviuk_vxj)
-
-func.cc_gp(cc_vshi_vxj)
+cross_correlations_df = pd.DataFrame(cross_correlations)
 
 
+cross_correlations_df.to_csv("/Users/aurasofi/Downloads/cross_corr.csv")
+
+for name, cc in cross_correlations.items():
+    func.cc_gp(cc, name)
+    
+    
+    
+cross_corr_cri = {}
+
+for crisis_name, (start, end, color) in crisis.items():
+    
+    df_crisis = df_global.loc[start:end]
+    
+    for pair_name, (index1, index2) in pairs.items():
+        
+        cross_corr_cri[f"{crisis_name}_{pair_name}"] = func.cross_corr(
+            df_crisis[index1],
+            df_crisis[index2],
+            max_lag=12
+        )
+
+cross_correlations_df = pd.DataFrame(cross_corr_cri)
+
+for name, cc in cross_corr_cri.items():
+    func.cc_gp(cc, name)
+    
+    
+    
+    
+    
+    
+    
+    
