@@ -31,7 +31,7 @@ crisis = {
 
 def corr_pd(df, start_date, end_date):
     period = df.loc[start_date:end_date]
-    corr = period.corr()
+    corr = period.corr().round(3)
     
     print(f"Correlation matrix: {start_date} to {end_date}")
     print(corr)
@@ -136,13 +136,13 @@ def get_max_corr(df, start_date, end_date):
     period = df.loc[start_date:end_date]
 
     return pd.DataFrame({
-        "max_correlation": period.max(),
+        "max_correlation": period.max().round(3),
         "date": period.idxmax(), 
     })
 
 
 def get_diff_corr(df, start_date, end_date):
-    diff = df.diff()
+    diff = df.diff().round(3)
     period = diff.loc[start_date:end_date]
     return period
 
@@ -473,7 +473,7 @@ def graficar_impulso_respuesta(modelo, nombre_emisor, horizonte=24):
         figsize=(12, 7)
     )
     
-    plt.suptitle(f"Respuesta ante un shock de {nombre_emisor}", fontsize=14, y=1.02)
+    plt.suptitle(f"Response to a shock of {nombre_emisor}", fontsize=14, y=1.02)
     plt.tight_layout()
     plt.show()
     
