@@ -15,7 +15,7 @@ from statsmodels.tsa.stattools import adfuller, kpss
 
 
 df_VIX = pd.read_csv("/Users/aurasofi/Downloads/VIX.csv")
-df_IVIUK = pd.read_csv("/Users/aurasofi/Downloads/IVIUK.csv")   #corregir
+df_IVIUK = pd.read_csv("/Users/aurasofi/Downloads/IVIUK.csv")   
 df_VHSI = pd.read_csv("/Users/aurasofi/Downloads/VHSI.csv")
 df_VXJ = pd.read_csv("/Users/aurasofi/Downloads/VXJ.csv")
 
@@ -127,8 +127,6 @@ for col, color in zip(df_global.columns, colors):
     ax.plot(df_global.index, df_global[col], label=col, color=color)
 
 
-fig, ax = plt.subplots(figsize=(15, 6))
-
 #Dibujar los periodos de crisis usando el diccionario
 for crisis_name, (start, end, color) in crisis.items():
     ax.axvspan(
@@ -139,13 +137,12 @@ for crisis_name, (start, end, color) in crisis.items():
         label=crisis_name
     )
 
-ax.set_title("Global Volatility Indices")
+ax.set_title("Global Implied Volatility Indices")
 ax.set_xlabel("Date")
 ax.set_ylabel("Volatility Index")
 ax.grid(True)
 ax.legend()
 plt.show()
-
 
 
 
@@ -185,13 +182,15 @@ crisis_euro = func.corr_pd(df_global, "2010-01-01", "2011-08-01")
 crisis_china = func.corr_pd(df_global, "2014-06-01", "2015-10-01")
 crisis_cvd = func.corr_pd(df_global, "2020-01-01", "2020-08-01")
 crisis_ruuk = func.corr_pd(df_global, "2022-01-01", "2022-05-01")
+full_period = func.corr_pd(df_global, "2005-01-04", "2025-12-19")
 
 
 func.corr_gp(crisis_2008, "2008")
-func.corr_gp(crisis_china, "China")
+func.corr_gp(crisis_china, "China Crash")
 func.corr_gp(crisis_cvd, "Covid")
 func.corr_gp(crisis_euro, "European Debt")
 func.corr_gp(crisis_ruuk, "Russia-Ukraine")
+func.corr_gp(full_period, "Full Period")
 
 
 """
@@ -290,7 +289,7 @@ cross_corr_cri = {}
 
 for crisis_name, (start, end, color) in crisis.items():
     
-    df_crisis = df_global.loc[start:end]
+    df_crisis = df_delta.loc[start:end]
     
     for pair_name, (index1, index2) in pairs.items():
         
@@ -409,7 +408,7 @@ fig, ax = plt.subplots(figsize=(12, 6))
 
 for idx in indices:
      ax.plot(volatilidad.index, volatilidad[f"{idx}_sigma"], label=idx, alpha=0.7)
-ax.set_title("Volatilidad Condicional — Estimación GARCH(1,1)", fontsize=13)
+ax.set_title("Conditional Volatility — GARCH(1,1)", fontsize=13)
 ax.legend(), ax.grid(alpha=0.3), plt.tight_layout(), plt.show()
     
 
@@ -797,39 +796,93 @@ plt.tight_layout()
 plt.show()
 
 
+# ==================================================
+# GRAFICAR PROBABILIDADES DE RÉGIMEN EN EL TIEMPO
+# ==================================================
 
-# ==================================================
-#  GRAFICAR PROBABILIDADES DE RÉGIMEN EN EL TIEMPO
-# ==================================================
 fig, axes = plt.subplots(3, 1, figsize=(14, 10), sharex=True)
 
-# Gráfico 1: Calma
-axes[0].plot(df_prob.index, df_prob["🟢 Calma"], color="green", label="Calma", lw=2)
-axes[0].set_title("Probabilidad: Régimen de Calma", fontsize=12)
-axes[0].axvspan("2008-09-01", "2009-03-31", alpha=0.2, color="red")
-axes[0].axvspan("2011-05-01", "2012-06-30", alpha=0.2, color="orange")
-axes[0].axvspan("2020-02-01", "2020-06-30", alpha=0.2, color="purple")
-axes[0].legend(), axes[0].grid(alpha=0.3)
+# Calma
+axes[0].plot(
+    df_prob.index,
+    df_prob["🟢 Calma"],
+    color="green",
+    label="Calm",
+    lw=2
+)
+axes[0].set_title("Probability: Calm Regime", fontsize=12)
+axes[0].grid(alpha=0.3)
 
-# Gráfico 2: Transición / ALERTA
-axes[1].plot(df_prob.index, df_prob["🟡 ALERTA / Transición"], color="orange", label="Alerta Temprana", lw=2)
-axes[1].set_title("Probabilidad: Régimen de Transición / ALERTA", fontsize=12)
-axes[1].axvspan("2008-09-01", "2009-03-31", alpha=0.2, color="red")
-axes[1].axvspan("2011-05-01", "2012-06-30", alpha=0.2, color="orange")
-axes[1].axvspan("2020-02-01", "2020-06-30", alpha=0.2, color="purple")
-axes[1].legend(), axes[1].grid(alpha=0.3)
+# Transición
+axes[1].plot(
+    df_prob.index,
+    df_prob["🟡 ALERTA / Transición"],
+    color="orange",
+    label="Transition",
+    lw=2
+)
+axes[1].set_title("Probability: Transition Regime", fontsize=12)
+axes[1].grid(alpha=0.3)
 
-# Gráfico 3: Crisis
-axes[2].plot(df_prob.index, df_prob["🔴 CRISIS"], color="red", label="Crisis", lw=2)
-axes[2].set_title("Probabilidad: Régimen de Crisis", fontsize=12)
-axes[2].axvspan("2008-09-01", "2009-03-31", alpha=0.2, color="red", label="Crisis 2008")
-axes[2].axvspan("2011-05-01", "2012-06-30", alpha=0.2, color="orange", label="Deuda Europea")
-axes[2].axvspan("2020-02-01", "2020-06-30", alpha=0.2, color="purple", label="COVID-19")
-axes[2].legend(), axes[2].grid(alpha=0.3)
+# Crisis
+axes[2].plot(
+    df_prob.index,
+    df_prob["🔴 CRISIS"],
+    color="red",
+    label="Crisis",
+    lw=2
+)
+axes[2].set_title("Probability: Crisis Regime", fontsize=12)
+axes[2].grid(alpha=0.3)
+
+for i, ax in enumerate(axes):
+    for crisis_name, (start, end, color) in crisis.items():
+        ax.axvspan(
+            start,
+            end,
+            color=color,
+            alpha=0.15,
+            label=crisis_name if i == 2 else None
+        )
+
+
+# ==================================================
+# CRISIS WINDOWS
+# ==================================================
+
+for ax in axes:
+    for crisis_name, (start, end, color) in crisis.items():
+        ax.axvspan(
+            start,
+            end,
+            color=color,
+            alpha=0.15
+        )
+
+
+# Labels
+axes[0].set_ylabel("Probability")
+axes[1].set_ylabel("Probability")
+axes[2].set_ylabel("Probability")
+axes[2].set_xlabel("Date")
+
+axes[0].legend()
+axes[1].legend()
+axes[2].legend()
+
+plt.suptitle(
+    "Evolution of HMM Regime Probabilities",
+    fontsize=15,
+    y=1.01
+)
 
 plt.tight_layout()
-plt.suptitle("EVOLUCIÓN DE RÉGIMENES DE MERCADO Y SEÑALES TEMPRANAS", fontsize=15, y=1.02)
-plt.show()   
+plt.show()
+
+
+
+
+
 
 # ===========================================================================
 
